@@ -1,3 +1,3 @@
 FROM vinik/devopsbox:latest
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+COPY entrypoint.sh /workdir/entrypoint.sh
+ENTRYPOINT ["/workdir/entrypoint.sh"]
