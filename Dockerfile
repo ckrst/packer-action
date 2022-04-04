@@ -1,3 +1,3 @@
-FROM vinik/devopsbox:0.1.0
+FROM vinik/devopsbox:latest
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
