@@ -1,45 +1,34 @@
 #!/usr/bin/env bash
 
-set -e -o pipefail -u
+set -e
 
-# Set default variables
-: "${INPUT_SECRET:=}"
-: "${INPUT_OPTIONS:=--}" # a double dash means the end of command options
-
-# Set and export default variables
-export SECRET_FILE="${SECRET_FILE:=/tmp/packer-secret}"
-
-# fatal creates an error annotation and aborts the program execution
-function fatal() {
-	local error_msg=$1
-	echo "::error::${error_msg}"
-	exit 1
-}
-
-function cleanup() {
-	if [ -f "${SECRET_FILE}" ] ; then
-		shred -u -f "${SECRET_FILE}"
-	fi
-}
-
-trap "cleanup" EXIT
-
-if [ -n "${INPUT_SECRET}" ] ; then
-	# Set a temporary mask using a subshell to write the secret to a read-only file
-	(umask 0266 && echo "${INPUT_SECRET}" > "${SECRET_FILE}")
-
-	# Remove env variable once the secret is written
-	unset INPUT_SECRET
+# fail if INPUT_COMMAND is not set
+if [ -z "${INPUT_COMMAND}" ]; then
+  echo "Required variable \`command\` is missing"
+  exit 1
 fi
 
-if [ -z "${INPUT_TEMPLATE}" ] ; then
-	fatal "'template' input parameter not provided"
+if [ -n "${INPUT_WORKING_DIRECTORY}" ]; then
+  cd "${INPUT_WORKING_DIRECTORY}"
 fi
 
-if ! /devops/tools/packer validate -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
-	fatal "'${INPUT_TEMPLATE}' template validation failed"
+# assemble operation
+if [ -z "${INPUT_ARGUMENTS}" ]; then
+  OPERATION="/devops/tools/packer ${INPUT_COMMAND}"
+else
+  OPERATION="/devops/tools/packer ${INPUT_COMMAND} ${INPUT_ARGUMENTS}"
 fi
 
-if ! /devops/tools/packer build -timestamp-ui -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
-	fatal "'${INPUT_TEMPLATE}' build failed"
-fi
+echo "::debug:: Executing command: ${OPERATION}"
+
+# cast INPUT_TARGET string to "array"
+# shellcheck disable=SC2206
+TARGETS=(${INPUT_TARGET})
+
+# iterate over target(s)
+for TARGET in "${TARGETS[@]}"; do
+  echo "::debug:: Processing target ${TARGET}"
+
+  # shellcheck disable=SC2086
+  ${OPERATION} "${TARGET}"
+done
