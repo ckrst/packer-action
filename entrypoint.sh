@@ -36,10 +36,10 @@ if [ -z "${INPUT_TEMPLATE}" ] ; then
 	fatal "'template' input parameter not provided"
 fi
 
-if ! packer validate -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
+if ! /devops/tools/packer validate -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
 	fatal "'${INPUT_TEMPLATE}' template validation failed"
 fi
 
-if ! packer build -timestamp-ui -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
+if ! /devops/tools/packer build -timestamp-ui -only="${INPUT_ONLY:=}" "${INPUT_OPTIONS}" "${INPUT_TEMPLATE}" ; then
 	fatal "'${INPUT_TEMPLATE}' build failed"
 fi
